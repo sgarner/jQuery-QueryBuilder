@@ -3,6 +3,7 @@
  * Romanian translation by ArianServ
  * Licensed under MIT (http://opensource.org/licenses/MIT)
  */
+
 jQuery.fn.queryBuilder.defaults({ lang: {
   "add_rule": "Adaugă regulă",
   "add_group": "Adaugă grup",

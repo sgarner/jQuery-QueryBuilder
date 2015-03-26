@@ -3,6 +3,7 @@
  * Spanish translation by "pyarza"
  * Licensed under MIT (http://opensource.org/licenses/MIT)
  */
+
 jQuery.fn.queryBuilder.defaults({ lang: {
   "add_rule": "Añadir regla",
   "add_group": "Añadir grupo",

@@ -3,6 +3,7 @@
  * Oversat af Jna Borup Coyle, github@coyle.dk
  * Licensed under MIT (http://opensource.org/licenses/MIT)
  */
+
 jQuery.fn.queryBuilder.defaults({ lang: {
   "add_rule": "Tilføj regel",
   "add_group": "Tilføj gruppe",

@@ -3,6 +3,7 @@
  * Dutch translation by "Roywcm"
  * Licensed under MIT (http://opensource.org/licenses/MIT)
  */
+
 jQuery.fn.queryBuilder.defaults({ lang: {
   "add_rule": "Nieuwe regel",
   "add_group": "Nieuwe groep",

@@ -3,6 +3,7 @@
  * Polish translation by Artur Smolarek
  * Licensed under MIT (http://opensource.org/licenses/MIT)
  */
+
 jQuery.fn.queryBuilder.defaults({ lang: {
   "add_rule": "Dodaj regułę",
   "add_group": "Dodaj grupę",

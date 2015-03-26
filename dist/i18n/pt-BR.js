@@ -3,6 +3,7 @@
  * Portuguese Brazilian translation by Leandro Gehlen (leandrogehlen@gmail.com)
  * Licensed under MIT (http://opensource.org/licenses/MIT)
  */
+
 jQuery.fn.queryBuilder.defaults({ lang: {
   "add_rule": "Nova Regra",
   "add_group": "Novo Gruop",
