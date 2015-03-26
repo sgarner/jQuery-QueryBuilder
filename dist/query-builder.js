@@ -683,12 +683,13 @@
             return;
         }
 
-        var e = $.Event('deleteGroup.queryBuilder', {
+        var e, eventParams = {
             group_id: $group[0].id,
             group: $group,
             builder: this
-        });
+        };
 
+        e = $.Event('deleteGroup.queryBuilder', eventParams);
         this.$el.trigger(e);
 
         if (e.isDefaultPrevented()) {
@@ -719,6 +720,9 @@
         if (!keepGroup) {
             $group.remove();
         }
+
+        e = $.Event('afterDeleteGroup.queryBuilder', eventParams);
+        this.$el.trigger(e);
 
         return !keepGroup;
     };
@@ -767,12 +771,13 @@
      * @return {boolean} true if the rule has been deleted
      */
     QueryBuilder.prototype.deleteRule = function($rule) {
-        var e = $.Event('deleteRule.queryBuilder', {
+        var e, eventParams = {
             rule_id: $rule[0].id,
             rule: $rule,
             builder: this
-        });
+        };
 
+        e = $.Event('deleteRule.queryBuilder', eventParams);
         this.$el.trigger(e);
 
         if (e.isDefaultPrevented()) {
@@ -782,6 +787,10 @@
         this.trigger('beforeDeleteRule', $rule);
 
         $rule.remove();
+
+        e = $.Event('afterDeleteRule.queryBuilder', eventParams);
+        this.$el.trigger(e);
+
         return true;
     };
 
@@ -1378,7 +1387,7 @@
         <i class="' + this.icons.add_group + '"></i> '+ this.lang.add_group +' \
       </button>'
     :'') +' \
-    '+ (level>1 ? 
+    '+ (level>1 ?
       '<button type="button" class="btn btn-xs btn-danger" data-delete="group"> \
         <i class="' + this.icons.remove_group + '"></i> '+ this.lang.delete_group +' \
       </button>'
@@ -1678,6 +1687,7 @@
             return args[parseInt(i)+1];
         });
     }
+
 
 $.fn.queryBuilder.define('bt-selectpicker', function(options) {
         if (!$.fn.selectpicker || !$.fn.selectpicker.Constructor) {

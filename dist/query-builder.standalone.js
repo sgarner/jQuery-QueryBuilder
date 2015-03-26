@@ -17,15 +17,36 @@
     }
 }(this, function() {
     "use strict";
+    
+    var returnTrue = function() { return true; },
+        returnFalse = function() { return false; };
 
     var MicroEvent = function(){};
 
+    /**
+     * Event object used to stop propagations and prevent default
+     */
+    MicroEvent.Event = function(){};
+
+    MicroEvent.Event.prototype = {
+        constructor: MicroEvent.Event,
+
+        isDefaultPrevented: returnFalse,
+        isPropagationStopped: returnFalse,
+
+        preventDefault: function() { this.isDefaultPrevented = returnTrue; },
+        stopPropagation: function() { this.isPropagationStopped = returnTrue; }
+    };
+
     MicroEvent.prototype = {
+        constructor: MicroEvent,
+
         /**
          * Add one or many event handlers
          *
          * @param {String,Object} events
-         * @param {Function} optional, callback
+         * @param {Function,optional} callback
+         * @return {Object} main object
          *
          * obj.on('event', callback)
          * obj.on('event1 event2', callback)
@@ -55,8 +76,9 @@
         /**
          * Remove one or many or all event handlers
          *
-         * @param {String,Object} optional, events
-         * @param {Function} optional, callback
+         * @param {String|Object,optional} events
+         * @param {Function,optional} callback
+         * @return {Object} main object
          *
          * obj.off('event')
          * obj.off('event', callback)
@@ -94,13 +116,14 @@
 
             return this;
         },
-        
+
         /**
          * Add one or many event handlers that will be called only once
          * This handlers are only applicable to "trigger", not "change"
          *
-         * @param {String,Object} events
-         * @param {Function} optional, callback
+         * @param {String|Object} events
+         * @param {Function,optional} callback
+         * @return {Object} main object
          *
          * obj.once('event', callback)
          * obj.once('event1 event2', callback)
@@ -131,49 +154,61 @@
          * Trigger all handlers for an event
          *
          * @param {String} event name
-         * @param {Mixed...} optional, arguments
+         * @param {mixed...} optional, arguments
+         * @return {MicroEvent.Event}
          */
         trigger: function (event /* , args... */) {
-            this._events = this._events || {};
-            this._once = this._once || {};
-            
             var args = Array.prototype.slice.call(arguments, 1),
-                callbacks;
-            
-            if (event in this._events) {
-                callbacks = this._events[event].slice();
-                while (callbacks.length) {
-                    callbacks.shift().apply(this, args);
+                e = new MicroEvent.Event(),
+                i, l;
+
+            args.push(e);
+
+            if (this._events && event in this._events) {
+                for (i=0, l=this._events[event].length; i<l; i++) {
+                    this._events[event][i].apply(this, args);
+                    if (e.isPropagationStopped()) {
+                        return e;
+                    }
                 }
             }
 
-            if (event in this._once) {
-                callbacks = this._once[event].slice();
-                while (callbacks.length) {
-                    callbacks.shift().apply(this, args);
+            if (this._once && event in this._once) {
+                for (i=0, l=this._once[event].length; i<l; i++) {
+                    this._once[event][i].apply(this, args);
+                    if (e.isPropagationStopped()) {
+                        delete this._once[event];
+                        return e;
+                    }
                 }
                 delete this._once[event];
             }
 
-            return this;
+            return e;
         },
 
         /**
          * Trigger all modificators for an event, each handler must return a value
          *
          * @param {String} event name
-         * @param {Mixed} event value
-         * @param {Mixed...} optional, arguments
+         * @param {mixed} event value
+         * @param {mixed...} optional, arguments
+         * @return {Mixed} modified value
          */
         change: function(event, value /* , args... */) {
-            this._events = this._events || {};
+            var args = Array.prototype.slice.call(arguments, 1),
+                e = new MicroEvent.Event(),
+                i, l;
 
-            if (event in this._events) {
-                var args = Array.prototype.slice.call(arguments, 1);
+            args.push(e);
 
-                for (var i=0, l=this._events[event].length; i<l; i++) {
+            if (this._events && event in this._events) {
+                for (i=0, l=this._events[event].length; i<l; i++) {
                     args[0] = value;
                     value = this._events[event][i].apply(this, args);
+                    if (e.isPropagationStopped()) {
+                        return value;
+                    }
                 }
             }
 
@@ -201,6 +236,17 @@
                 obj[method] = MicroEvent.prototype[props[i]];
             }
         }
+
+        Object.defineProperties(typeof obj === 'function' ? obj.prototype : obj, {
+            '_events': {
+                value: null,
+                writable: true
+            },
+            '_once': {
+                value: null,
+                writable: true
+            }
+        });
     };
 
     return MicroEvent;
@@ -1017,12 +1063,13 @@
             return;
         }
 
-        var e = $.Event('deleteGroup.queryBuilder', {
+        var e, eventParams = {
             group_id: $group[0].id,
             group: $group,
             builder: this
-        });
+        };
 
+        e = $.Event('deleteGroup.queryBuilder', eventParams);
         this.$el.trigger(e);
 
         if (e.isDefaultPrevented()) {
@@ -1053,6 +1100,9 @@
         if (!keepGroup) {
             $group.remove();
         }
+
+        e = $.Event('afterDeleteGroup.queryBuilder', eventParams);
+        this.$el.trigger(e);
 
         return !keepGroup;
     };
@@ -1101,12 +1151,13 @@
      * @return {boolean} true if the rule has been deleted
      */
     QueryBuilder.prototype.deleteRule = function($rule) {
-        var e = $.Event('deleteRule.queryBuilder', {
+        var e, eventParams = {
             rule_id: $rule[0].id,
             rule: $rule,
             builder: this
-        });
+        };
 
+        e = $.Event('deleteRule.queryBuilder', eventParams);
         this.$el.trigger(e);
 
         if (e.isDefaultPrevented()) {
@@ -1116,6 +1167,10 @@
         this.trigger('beforeDeleteRule', $rule);
 
         $rule.remove();
+
+        e = $.Event('afterDeleteRule.queryBuilder', eventParams);
+        this.$el.trigger(e);
+
         return true;
     };
 
@@ -1712,7 +1767,7 @@
         <i class="' + this.icons.add_group + '"></i> '+ this.lang.add_group +' \
       </button>'
     :'') +' \
-    '+ (level>1 ? 
+    '+ (level>1 ?
       '<button type="button" class="btn btn-xs btn-danger" data-delete="group"> \
         <i class="' + this.icons.remove_group + '"></i> '+ this.lang.delete_group +' \
       </button>'
@@ -2012,6 +2067,7 @@
             return args[parseInt(i)+1];
         });
     }
+
 
 $.fn.queryBuilder.define('bt-selectpicker', function(options) {
         if (!$.fn.selectpicker || !$.fn.selectpicker.Constructor) {
